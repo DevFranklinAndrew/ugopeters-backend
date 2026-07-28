@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, {
   type Application,
@@ -16,6 +17,7 @@ const appConfig = (app: Application) => {
     .use(cors({ credentials: true, origin: [envConfig.CLIENT_URL] }))
     .use(helmet())
     .use(express.json())
+    .use(cookieParser())
     .set("trust proxy", 1)
     .use(morgan("dev"));
 
