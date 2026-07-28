@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
-    "seed:admin": "ts-node src/scripts/seed-admin.script.ts"
+    "seed:admin": "ts-node src/scripts/seed-admin.script.ts",
+    "seed:posts": "ts-node --transpile-only src/scripts/seed-posts.script.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
