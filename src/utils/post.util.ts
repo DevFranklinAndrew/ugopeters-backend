@@ -59,3 +59,12 @@ export const formatDate = (date = new Date()): string =>
     day: "numeric",
     year: "numeric",
   });
+
+/** Collects the `src` of every `<img>` in a content HTML string. */
+export const extractImageUrls = (html: string): string[] => {
+  const urls: string[] = [];
+  const regex = /<img[^>]+src=["']([^"']+)["']/gi;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(html)) !== null) urls.push(match[1]);
+  return urls;
+};

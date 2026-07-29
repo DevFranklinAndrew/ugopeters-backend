@@ -16,6 +16,12 @@ const envConfig = {
   ADMIN_NAME: process.env.ADMIN_NAME ?? "Ugo Peters",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "admin@ugopeters.com",
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "admin123",
+
+  // Cloudinary (blog image uploads)
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? "",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? "",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? "",
+  CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER ?? "ugopeters/blog",
 };
 
 export default envConfig;

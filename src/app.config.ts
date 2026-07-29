@@ -16,7 +16,9 @@ const appConfig = (app: Application) => {
   app
     .use(cors({ credentials: true, origin: [envConfig.CLIENT_URL] }))
     .use(helmet())
-    .use(express.json())
+    // Images now upload to Cloudinary (POST /api/upload) and posts store only
+    // URLs, so bodies are small. 1mb is generous headroom for long articles.
+    .use(express.json({ limit: "1mb" }))
     .use(cookieParser())
     .set("trust proxy", 1)
     .use(morgan("dev"));

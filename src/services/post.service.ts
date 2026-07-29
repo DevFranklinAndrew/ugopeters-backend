@@ -6,10 +6,18 @@ import type {
 } from "../validations/post.validation";
 import {
   deriveExcerpt,
+  extractImageUrls,
   formatDate,
   readingTime,
   slugify,
 } from "../utils/post.util";
+import { deleteImages } from "./upload.service";
+
+/** All image URLs a post references: its cover plus any inline content images. */
+const imageUrlsOf = (post: PostDocument): string[] => [
+  post.image,
+  ...extractImageUrls(post.content),
+];
 
 export interface ListPostsQuery {
   page?: number;
@@ -110,6 +118,7 @@ const updatePost = async (
   input: UpdatePostInput,
 ): Promise<PostDocument> => {
   const post = await getPostById(id);
+  const oldUrls = imageUrlsOf(post);
 
   if (input.title !== undefined && input.title !== post.title) {
     post.title = input.title;
@@ -131,13 +140,20 @@ const updatePost = async (
   }
 
   await post.save();
+
+  // Clean up Cloudinary assets no longer referenced after the update.
+  const newUrls = new Set(imageUrlsOf(post));
+  await deleteImages(oldUrls.filter((url) => !newUrls.has(url)));
+
   return post;
 };
 
-/** Deletes a post by id. 404 if missing. */
+/** Deletes a post by id, plus its Cloudinary images. 404 if missing. */
 const deletePost = async (id: string): Promise<void> => {
   const post = await getPostById(id);
+  const urls = imageUrlsOf(post);
   await post.deleteOne();
+  await deleteImages(urls);
 };
 
 /** Loads a post by Mongo `_id`; throws 404 (CastErrors are handled globally). */
