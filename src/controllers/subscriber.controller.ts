@@ -17,10 +17,11 @@ const subscribe = async (req: Request, res: Response): Promise<void> => {
   const { subscriber, created } = await subscriberService.subscribe(email);
 
   // Only on a genuinely new signup: welcome the subscriber and alert Ugo.
-  // Best-effort, non-blocking — repeats send nothing.
+  // Best-effort side effects, not awaited so they can't block or fail the
+  // response (each fn handles its own errors); repeats send nothing.
   if (created) {
-    void emailService.sendWelcomeEmail(subscriber.email);
-    void emailService.sendSubscriberNotification(subscriber.email);
+    emailService.sendWelcomeEmail(subscriber.email);
+    emailService.sendSubscriberNotification(subscriber.email);
   }
 
   res.status(created ? 201 : 200).json({

@@ -24,8 +24,9 @@ const submitMessage = async (req: Request, res: Response): Promise<void> => {
   const input = validateCreateMessage(req.body);
   const message = await messageService.createMessage(input);
 
-  // Notify Ugo — best-effort, non-blocking (the message is already saved).
-  void emailService.sendContactNotification(message);
+  // Notify Ugo — best-effort side effect, not awaited so it can't block or fail
+  // the response (the message is already saved; the fn handles its own errors).
+  emailService.sendContactNotification(message);
 
   res.status(201).json({
     status: "success",

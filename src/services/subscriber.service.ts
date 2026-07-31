@@ -72,4 +72,10 @@ const deleteSubscriber = async (id: string): Promise<void> => {
   await subscriber.deleteOne();
 };
 
-export { subscribe, listSubscribers, deleteSubscriber };
+/** Every subscriber's email address (for newsletter broadcasts). */
+const getAllEmails = async (): Promise<string[]> => {
+  const docs = await Subscriber.find().select("email").lean();
+  return docs.map((doc) => doc.email);
+};
+
+export { subscribe, listSubscribers, deleteSubscriber, getAllEmails };

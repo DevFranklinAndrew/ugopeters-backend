@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { PostDocument } from "../models/post.model";
+import * as emailService from "../services/email.service";
 import * as postService from "../services/post.service";
 import { toBoolean, toPositiveInt } from "../utils/query.util";
 import {
@@ -52,6 +53,12 @@ const getPost = async (req: Request, res: Response): Promise<void> => {
 const createPost = async (req: Request, res: Response): Promise<void> => {
   const input = validateCreatePost(req.body);
   const post = await postService.createPost(input);
+
+  // Announce the new post to newsletter subscribers. Not awaited: it's a
+  // best-effort side effect that must not block or fail the create response
+  // (the function catches its own errors internally).
+  emailService.sendNewPostNotification(post);
+
   res.status(201).json({
     status: "success",
     data: { post: toPublicPost(post) },
