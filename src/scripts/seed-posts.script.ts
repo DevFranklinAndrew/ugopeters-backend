@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as path from "path";
+import * as ts from "typescript";
 import mongoose from "mongoose";
 import envConfig from "../configurations/env.configuration";
 import Post from "../models/post.model";
@@ -17,15 +20,37 @@ type SeedPost = {
   author: string;
 };
 
-// The frontend's static blog data is the source of truth for the initial seed.
-// It lives outside backend's rootDir and is an ESM module, so we pull it via a
-// runtime `require` (resolved by ts-node's .ts loader under
-// `ts-node --transpile-only` — see the `seed:posts` npm script) rather than a
-// static `import`, which `tsc` would reject with TS6059.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { posts } = require("../../../frontend/src/data/post") as {
-  posts: SeedPost[];
+/**
+ * Loads the frontend's static blog data (the source of truth for the initial
+ * seed). It lives outside backend's rootDir and is an ESM module, so it can't be
+ * `import`ed (tsc rootDir) or `require`d (ERR_REQUIRE_ESM). Instead we read it
+ * as text and transpile it in-memory to CommonJS — the file is pure data with
+ * no imports, so evaluating it standalone is safe.
+ */
+const loadFrontendPosts = (): SeedPost[] => {
+  const file = path.resolve(__dirname, "../../../frontend/src/data/post.ts");
+  const source = fs.readFileSync(file, "utf8");
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+    },
+  });
+
+  const shim = { exports: {} as { posts?: SeedPost[] } };
+  new Function("exports", "module", "require", outputText)(
+    shim.exports,
+    shim,
+    require,
+  );
+
+  if (!shim.exports.posts) {
+    throw new Error("No `posts` export found in frontend/src/data/post.ts");
+  }
+  return shim.exports.posts;
 };
+
+const posts = loadFrontendPosts();
 
 /**
  * Ports the existing frontend posts into MongoDB. Idempotent: a post whose slug
