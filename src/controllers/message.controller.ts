@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { MessageDocument } from "../models/message.model";
+import * as emailService from "../services/email.service";
 import * as messageService from "../services/message.service";
 import { toBoolean, toPositiveInt } from "../utils/query.util";
 import {
@@ -22,6 +23,10 @@ const toPublicMessage = (message: MessageDocument) => ({
 const submitMessage = async (req: Request, res: Response): Promise<void> => {
   const input = validateCreateMessage(req.body);
   const message = await messageService.createMessage(input);
+
+  // Notify Ugo — best-effort, non-blocking (the message is already saved).
+  void emailService.sendContactNotification(message);
+
   res.status(201).json({
     status: "success",
     data: { message: toPublicMessage(message) },

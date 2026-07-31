@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { SubscriberDocument } from "../models/subscriber.model";
+import * as emailService from "../services/email.service";
 import * as subscriberService from "../services/subscriber.service";
 import { toPositiveInt } from "../utils/query.util";
 import { validateCreateSubscriber } from "../validations/subscriber.validation";
@@ -14,6 +15,13 @@ const toPublicSubscriber = (subscriber: SubscriberDocument) => ({
 const subscribe = async (req: Request, res: Response): Promise<void> => {
   const { email } = validateCreateSubscriber(req.body);
   const { subscriber, created } = await subscriberService.subscribe(email);
+
+  // Only on a genuinely new signup: welcome the subscriber and alert Ugo.
+  // Best-effort, non-blocking — repeats send nothing.
+  if (created) {
+    void emailService.sendWelcomeEmail(subscriber.email);
+    void emailService.sendSubscriberNotification(subscriber.email);
+  }
 
   res.status(created ? 201 : 200).json({
     status: "success",

@@ -22,6 +22,19 @@ const envConfig = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? "",
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? "",
   CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER ?? "ugopeters/blog",
+
+  // Email (Resend primary, SMTP fallback) — unset ⇒ email is skipped, not an error.
+  RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
+  EMAIL_FROM: process.env.EMAIL_FROM ?? "Ugo Peters <onboarding@resend.dev>",
+  // `||` (not `??`) so a present-but-empty var falls back instead of sending to "".
+  CONTACT_NOTIFY_EMAIL:
+    process.env.CONTACT_NOTIFY_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    "admin@ugopeters.com",
+  SMTP_HOST: process.env.SMTP_HOST ?? "",
+  SMTP_PORT: process.env.SMTP_PORT ?? "587",
+  SMTP_USER: process.env.SMTP_USER ?? "",
+  SMTP_PASS: process.env.SMTP_PASS ?? "",
 };
 
 export default envConfig;
