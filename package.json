@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "seed:admin": "ts-node src/scripts/seed-admin.script.ts",
     "seed:posts": "ts-node --transpile-only src/scripts/seed-posts.script.ts",
-    "seed:messages": "ts-node src/scripts/seed-messages.script.ts"
+    "seed:messages": "ts-node src/scripts/seed-messages.script.ts",
+    "seed:subscribers": "ts-node src/scripts/seed-subscribers.script.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
