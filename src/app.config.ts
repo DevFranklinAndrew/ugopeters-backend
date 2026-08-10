@@ -17,11 +17,10 @@ const appConfig = (app: Application) => {
     .use(
       cors({
         credentials: true,
-        origin: [
-          envConfig.CLIENT_URL,
-          "https://ugopeters-frontend.vercel.app",
-          "https://www.ugopeters.net"
-        ],
+        // Driven by CORS_ORIGINS. Hosts used to be hardcoded here, so every new
+        // frontend origin (apex, www, a custom domain) needed a code change and
+        // redeploy before the browser would accept a response.
+        origin: envConfig.CORS_ORIGINS,
       }),
     )
     .use(helmet())

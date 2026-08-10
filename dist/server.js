@@ -12,6 +12,9 @@ const port = Number(env_configuration_1.default.PORT);
 (0, app_config_1.default)(app);
 const server = app.listen(port, () => {
     console.log(`Server is listening to PORT: ${port}`);
+    // A blocked origin produces no server-side error — the browser just drops the
+    // response — so log the allow-list to make a CORS misconfiguration visible.
+    console.log(`[cors] allowed origins: ${env_configuration_1.default.CORS_ORIGINS.join(", ")}`);
 });
 (0, db_configuration_1.default)();
 process.on("uncaughtException", (error) => {

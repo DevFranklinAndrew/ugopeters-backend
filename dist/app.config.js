@@ -16,10 +16,10 @@ const appConfig = (app) => {
     app
         .use((0, cors_1.default)({
         credentials: true,
-        origin: [
-            env_configuration_1.default.CLIENT_URL,
-            "https://ugopeters-frontend.vercel.app",
-        ],
+        // Driven by CORS_ORIGINS. Hosts used to be hardcoded here, so every new
+        // frontend origin (apex, www, a custom domain) needed a code change and
+        // redeploy before the browser would accept a response.
+        origin: env_configuration_1.default.CORS_ORIGINS,
     }))
         .use((0, helmet_1.default)())
         // Images now upload to Cloudinary (POST /api/upload) and posts store only

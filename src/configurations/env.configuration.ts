@@ -2,11 +2,36 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/** Canonical site URL. Used to build links in outgoing email, so it must stay
+ *  a single origin — the CORS allow-list is CORS_ORIGINS below. */
+const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
+
 const envConfig = {
   PORT: process.env.PORT ?? "4000",
   NODE_ENV: process.env.NODE_ENV ?? "development",
   MONGO_URI: process.env.MONGO_URI ?? "mongodb://127.0.0.1:27017/ugopeters",
-  CLIENT_URL: process.env.CLIENT_URL ?? "http://localhost:5173",
+  CLIENT_URL,
+
+  /** Browser origins allowed to call the API with credentials. Comma-separated
+   *  so apex + www + preview deployments can be served without a code change.
+   *
+   *  The fallback lists the known production hosts deliberately: if this were
+   *  left to CLIENT_URL alone, forgetting to set CORS_ORIGINS on the host would
+   *  silently block the live site. Setting CORS_ORIGINS replaces the list.
+   *
+   *  Trailing slashes are stripped — an Origin header never carries one, and a
+   *  stray slash makes the comparison fail with no obvious cause. */
+  CORS_ORIGINS: (
+    process.env.CORS_ORIGINS ??
+    [
+      CLIENT_URL,
+      "https://www.ugopeters.net",
+      "https://ugopeters-frontend.vercel.app",
+    ].join(",")
+  )
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
 
   // Admin auth (CMS)
   JWT_SECRET: process.env.JWT_SECRET ?? "dev-only-insecure-secret-change-me",
