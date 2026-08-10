@@ -20,6 +20,7 @@ const appConfig = (app: Application) => {
         origin: [
           envConfig.CLIENT_URL,
           "https://ugopeters-frontend.vercel.app",
+          "https://www.ugopeters.net"
         ],
       }),
     )
