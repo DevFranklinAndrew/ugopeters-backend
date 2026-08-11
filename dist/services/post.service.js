@@ -70,14 +70,16 @@ const getPostBySlug = async (slug) => {
 };
 exports.getPostBySlug = getPostBySlug;
 /**
- * Creates a post, deriving slug / excerpt / readTime server-side. `date` comes
- * from the CMS when supplied (so older articles can be back-dated), otherwise
- * it defaults to today. Both the sortable `publishedAt` and its display string
- * are written from the same instant so they can never disagree.
+ * Creates a post, deriving slug / excerpt / readTime server-side.
+ *
+ * `date` is free text from the CMS (so older articles can be back-dated) and is
+ * stored exactly as typed — it is the string readers see. `publishedAt` is a
+ * best-effort parse of it, used only for ordering; text that isn't a date falls
+ * back to now, which keeps the post saveable and simply sorts it as current.
  */
 const createPost = async (input) => {
     const slug = await generateUniqueSlug(input.title);
-    const publishedAt = input.date ? (0, post_util_1.parseDateInput)(input.date) : new Date();
+    const date = input.date?.trim() || (0, post_util_1.formatDate)();
     return post_model_1.default.create({
         title: input.title,
         content: input.content,
@@ -87,8 +89,8 @@ const createPost = async (input) => {
         excerpt: input.excerpt?.trim() || (0, post_util_1.deriveExcerpt)(input.content),
         slug,
         readTime: (0, post_util_1.readingTime)(input.content),
-        publishedAt,
-        date: (0, post_util_1.formatDate)(publishedAt),
+        date,
+        publishedAt: (0, post_util_1.parsePublishDate)(date) ?? new Date(),
     });
 };
 exports.createPost = createPost;
@@ -116,8 +118,8 @@ const updatePost = async (id, input) => {
     if (input.featured !== undefined)
         post.featured = input.featured;
     if (input.date !== undefined) {
-        post.publishedAt = (0, post_util_1.parseDateInput)(input.date);
-        post.date = (0, post_util_1.formatDate)(post.publishedAt);
+        post.date = input.date.trim();
+        post.publishedAt = (0, post_util_1.parsePublishDate)(post.date) ?? post.publishedAt;
     }
     // Use the provided excerpt, else re-derive from the (possibly new) content.
     if (input.excerpt !== undefined) {

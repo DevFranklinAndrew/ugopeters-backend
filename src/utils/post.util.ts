@@ -61,27 +61,31 @@ export const formatDate = (date = new Date()): string =>
   });
 
 /**
- * Parses the CMS date input (`yyyy-mm-dd`) into a Date.
+ * Best-effort parse of the free-text publish date into a sortable Date.
  *
- * Built from local parts at midday rather than `new Date("2026-08-10")`, which
- * the spec parses as UTC midnight — in any negative-offset timezone that lands
- * on the previous calendar day, so a post dated the 10th would display as the
- * 9th. Midday keeps the same date for every real-world offset.
+ * The CMS date is plain text so the author controls exactly how it reads, and
+ * that string is what gets displayed verbatim. This is only used to derive
+ * `publishedAt` for ordering, so anything unparseable ("Coming soon") returns
+ * null and the caller falls back — a date that reads oddly should never block
+ * saving a post.
+ *
+ * A bare `yyyy-mm-dd` is handled separately: the spec parses it as UTC
+ * midnight, which in a negative-offset timezone lands on the previous calendar
+ * day. Building it from local parts at midday keeps the intended day.
  */
-export const parseDateInput = (value: string): Date => {
-  const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0);
-};
+export const parsePublishDate = (value?: string): Date | null => {
+  const text = value?.trim();
+  if (!text) return null;
 
-/** True when `yyyy-mm-dd` is a real calendar date (rejects e.g. 2026-02-31). */
-export const isValidDateInput = (value: string): boolean => {
-  const [year, month, day] = value.split("-").map(Number);
-  const parsed = parseDateInput(value);
-  return (
-    parsed.getFullYear() === year &&
-    parsed.getMonth() === month - 1 &&
-    parsed.getDate() === day
-  );
+  const isoDay = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (isoDay) {
+    const [, year, month, day] = isoDay.map(Number);
+    const parsed = new Date(year, month - 1, day, 12, 0, 0, 0);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
 /** Collects the `src` of every `<img>` in a content HTML string. */

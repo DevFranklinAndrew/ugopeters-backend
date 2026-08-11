@@ -1,6 +1,5 @@
 import { z } from "zod";
 import AppError from "../errors/app.error";
-import { isValidDateInput } from "../utils/post.util";
 
 /**
  * Client-supplied fields for a post. The server owns the derived fields
@@ -15,13 +14,10 @@ const createPostSchema = z.object({
   image: z.string().trim().min(1, "Image is required."),
   excerpt: z.string().trim().optional(),
   featured: z.boolean().optional(),
-  // `yyyy-mm-dd`, as emitted by <input type="date">.
-  date: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in yyyy-mm-dd format.")
-    .refine(isValidDateInput, "That date does not exist.")
-    .optional(),
+  // Free text — stored and displayed verbatim (e.g. "January 15, 2020"), so the
+  // author controls exactly how it reads. Only parsed, best-effort, to derive
+  // the sortable publishedAt.
+  date: z.string().trim().min(1, "Date cannot be empty.").optional(),
 });
 
 // Every field optional for a partial update, but reject an empty payload.

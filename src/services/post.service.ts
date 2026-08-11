@@ -8,7 +8,7 @@ import {
   deriveExcerpt,
   extractImageUrls,
   formatDate,
-  parseDateInput,
+  parsePublishDate,
   readingTime,
   slugify,
 } from "../utils/post.util";
@@ -99,14 +99,16 @@ const getPostBySlug = async (slug: string): Promise<PostDocument> => {
 };
 
 /**
- * Creates a post, deriving slug / excerpt / readTime server-side. `date` comes
- * from the CMS when supplied (so older articles can be back-dated), otherwise
- * it defaults to today. Both the sortable `publishedAt` and its display string
- * are written from the same instant so they can never disagree.
+ * Creates a post, deriving slug / excerpt / readTime server-side.
+ *
+ * `date` is free text from the CMS (so older articles can be back-dated) and is
+ * stored exactly as typed — it is the string readers see. `publishedAt` is a
+ * best-effort parse of it, used only for ordering; text that isn't a date falls
+ * back to now, which keeps the post saveable and simply sorts it as current.
  */
 const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
   const slug = await generateUniqueSlug(input.title);
-  const publishedAt = input.date ? parseDateInput(input.date) : new Date();
+  const date = input.date?.trim() || formatDate();
 
   return Post.create({
     title: input.title,
@@ -117,8 +119,8 @@ const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
     excerpt: input.excerpt?.trim() || deriveExcerpt(input.content),
     slug,
     readTime: readingTime(input.content),
-    publishedAt,
-    date: formatDate(publishedAt),
+    date,
+    publishedAt: parsePublishDate(date) ?? new Date(),
   });
 };
 
@@ -150,8 +152,8 @@ const updatePost = async (
   if (input.featured !== undefined) post.featured = input.featured;
 
   if (input.date !== undefined) {
-    post.publishedAt = parseDateInput(input.date);
-    post.date = formatDate(post.publishedAt);
+    post.date = input.date.trim();
+    post.publishedAt = parsePublishDate(post.date) ?? post.publishedAt;
   }
 
   // Use the provided excerpt, else re-derive from the (possibly new) content.
