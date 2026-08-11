@@ -11,6 +11,8 @@ export interface IPost {
   excerpt: string;
   content: string;
   date: string;
+  /** Sortable publish date. `date` above is only its display rendering. */
+  publishedAt: Date;
   category: string;
   readTime: string;
   image: string;
@@ -48,6 +50,12 @@ const postSchema = new Schema<IPost, PostModel>(
     date: {
       type: String,
       required: [true, "Date is required."],
+    },
+    // Indexed because every list query sorts on it.
+    publishedAt: {
+      type: Date,
+      default: Date.now,
+      index: true,
     },
     category: {
       type: String,

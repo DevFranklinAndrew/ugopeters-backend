@@ -6,7 +6,7 @@
  * is reimplemented without the DOM (no `document` in Node) using a regex.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractImageUrls = exports.formatDate = exports.deriveExcerpt = exports.readingTime = exports.stripHtml = exports.slugify = void 0;
+exports.extractImageUrls = exports.isValidDateInput = exports.parseDateInput = exports.formatDate = exports.deriveExcerpt = exports.readingTime = exports.stripHtml = exports.slugify = void 0;
 const WORDS_PER_MINUTE = 200;
 const EXCERPT_LENGTH = 160;
 /** Title → URL-friendly, kebab-case slug (matches the CMS `slugify`). */
@@ -58,6 +58,28 @@ const formatDate = (date = new Date()) => date.toLocaleDateString("en-US", {
     year: "numeric",
 });
 exports.formatDate = formatDate;
+/**
+ * Parses the CMS date input (`yyyy-mm-dd`) into a Date.
+ *
+ * Built from local parts at midday rather than `new Date("2026-08-10")`, which
+ * the spec parses as UTC midnight — in any negative-offset timezone that lands
+ * on the previous calendar day, so a post dated the 10th would display as the
+ * 9th. Midday keeps the same date for every real-world offset.
+ */
+const parseDateInput = (value) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+exports.parseDateInput = parseDateInput;
+/** True when `yyyy-mm-dd` is a real calendar date (rejects e.g. 2026-02-31). */
+const isValidDateInput = (value) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const parsed = (0, exports.parseDateInput)(value);
+    return (parsed.getFullYear() === year &&
+        parsed.getMonth() === month - 1 &&
+        parsed.getDate() === day);
+};
+exports.isValidDateInput = isValidDateInput;
 /** Collects the `src` of every `<img>` in a content HTML string. */
 const extractImageUrls = (html) => {
     const urls = [];

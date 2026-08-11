@@ -26,6 +26,12 @@ const postSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Date is required."],
     },
+    // Indexed because every list query sorts on it.
+    publishedAt: {
+        type: Date,
+        default: Date.now,
+        index: true,
+    },
     category: {
         type: String,
         required: [true, "Category is required."],

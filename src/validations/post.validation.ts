@@ -1,10 +1,12 @@
 import { z } from "zod";
 import AppError from "../errors/app.error";
+import { isValidDateInput } from "../utils/post.util";
 
 /**
  * Client-supplied fields for a post. The server owns the derived fields
- * (`slug`, `readTime`, `date`) and fills `excerpt` from `content` when blank,
- * so those are NOT accepted here.
+ * (`slug`, `readTime`) and fills `excerpt` from `content` when blank, so those
+ * are NOT accepted here. `date` IS accepted so the CMS can back-date manual
+ * uploads; omitted, it defaults to today.
  */
 const createPostSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
@@ -13,6 +15,13 @@ const createPostSchema = z.object({
   image: z.string().trim().min(1, "Image is required."),
   excerpt: z.string().trim().optional(),
   featured: z.boolean().optional(),
+  // `yyyy-mm-dd`, as emitted by <input type="date">.
+  date: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in yyyy-mm-dd format.")
+    .refine(isValidDateInput, "That date does not exist.")
+    .optional(),
 });
 
 // Every field optional for a partial update, but reject an empty payload.

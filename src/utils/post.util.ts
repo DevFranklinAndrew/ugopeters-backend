@@ -60,6 +60,30 @@ export const formatDate = (date = new Date()): string =>
     year: "numeric",
   });
 
+/**
+ * Parses the CMS date input (`yyyy-mm-dd`) into a Date.
+ *
+ * Built from local parts at midday rather than `new Date("2026-08-10")`, which
+ * the spec parses as UTC midnight — in any negative-offset timezone that lands
+ * on the previous calendar day, so a post dated the 10th would display as the
+ * 9th. Midday keeps the same date for every real-world offset.
+ */
+export const parseDateInput = (value: string): Date => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+/** True when `yyyy-mm-dd` is a real calendar date (rejects e.g. 2026-02-31). */
+export const isValidDateInput = (value: string): boolean => {
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = parseDateInput(value);
+  return (
+    parsed.getFullYear() === year &&
+    parsed.getMonth() === month - 1 &&
+    parsed.getDate() === day
+  );
+};
+
 /** Collects the `src` of every `<img>` in a content HTML string. */
 export const extractImageUrls = (html: string): string[] => {
   const urls: string[] = [];

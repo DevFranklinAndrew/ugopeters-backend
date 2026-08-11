@@ -83,7 +83,16 @@ const seedPosts = async () => {
                 skipped += 1;
                 continue;
             }
-            await post_model_1.default.create({ ...post, featured: post.featured ?? false });
+            // The seed data only carries a display date ("January 28, 2026"); derive
+            // the sortable publishedAt from it so seeded posts order chronologically
+            // rather than by insertion. Unparseable dates fall back to the default.
+            const parsed = new Date(post.date);
+            const publishedAt = Number.isNaN(parsed.getTime()) ? undefined : parsed;
+            await post_model_1.default.create({
+                ...post,
+                featured: post.featured ?? false,
+                ...(publishedAt ? { publishedAt } : {}),
+            });
             created += 1;
             console.log(`[seed] Created post: ${post.slug}`);
         }

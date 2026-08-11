@@ -16,6 +16,8 @@ const toPublicPost = (post: PostDocument) => ({
   excerpt: post.excerpt,
   content: post.content,
   date: post.date,
+  // The sortable form of `date` — the CMS prefills its date input from this.
+  publishedAt: post.publishedAt,
   category: post.category,
   readTime: post.readTime,
   image: post.image,

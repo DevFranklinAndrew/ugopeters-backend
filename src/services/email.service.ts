@@ -92,7 +92,7 @@ const layout = (heading: string, bodyHtml: string): string => `
               <tr>
                 <td style="padding: 20px 40px 30px; font-family: ${FONT_SANS}; font-size: 12px; line-height: 1.6; color: #a1a1aa;">
                   Ugo Peters — real estate strategy, ventures &amp; executive mentorship.<br />
-                  <a href="${envConfig.CLIENT_URL}" target="_blank" style="color: ${GOLD}; text-decoration: none;">ugopeters.com</a>
+                  <a href="${envConfig.CLIENT_URL}" target="_blank" style="color: ${GOLD}; text-decoration: none;">ugopeters.net</a>
                 </td>
               </tr>
             </table>

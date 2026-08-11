@@ -8,6 +8,7 @@ import {
   deriveExcerpt,
   extractImageUrls,
   formatDate,
+  parseDateInput,
   readingTime,
   slugify,
 } from "../utils/post.util";
@@ -74,7 +75,13 @@ const listPosts = async (query: ListPostsQuery): Promise<ListPostsResult> => {
   }
 
   const [posts, total] = await Promise.all([
-    Post.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    // Sort on the publish date so back-dated manual uploads slot into the right
+    // place chronologically, not wherever they happened to be entered.
+    // `createdAt` breaks ties (and orders any legacy row without publishedAt).
+    Post.find(filter)
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
     Post.countDocuments(filter),
   ]);
 
@@ -91,9 +98,15 @@ const getPostBySlug = async (slug: string): Promise<PostDocument> => {
   return post;
 };
 
-/** Creates a post, deriving slug / excerpt / readTime / date server-side. */
+/**
+ * Creates a post, deriving slug / excerpt / readTime server-side. `date` comes
+ * from the CMS when supplied (so older articles can be back-dated), otherwise
+ * it defaults to today. Both the sortable `publishedAt` and its display string
+ * are written from the same instant so they can never disagree.
+ */
 const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
   const slug = await generateUniqueSlug(input.title);
+  const publishedAt = input.date ? parseDateInput(input.date) : new Date();
 
   return Post.create({
     title: input.title,
@@ -104,14 +117,16 @@ const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
     excerpt: input.excerpt?.trim() || deriveExcerpt(input.content),
     slug,
     readTime: readingTime(input.content),
-    date: formatDate(),
+    publishedAt,
+    date: formatDate(publishedAt),
   });
 };
 
 /**
  * Partially updates a post by id. Regenerates the slug when the title changes,
  * recomputes readTime when content changes, and re-derives a blank excerpt.
- * `date` is intentionally preserved. 404 if the post doesn't exist.
+ * The publish date is only touched when `date` is supplied, so an edit that
+ * omits it leaves the original date alone. 404 if the post doesn't exist.
  */
 const updatePost = async (
   id: string,
@@ -133,6 +148,11 @@ const updatePost = async (
   if (input.category !== undefined) post.category = input.category;
   if (input.image !== undefined) post.image = input.image;
   if (input.featured !== undefined) post.featured = input.featured;
+
+  if (input.date !== undefined) {
+    post.publishedAt = parseDateInput(input.date);
+    post.date = formatDate(post.publishedAt);
+  }
 
   // Use the provided excerpt, else re-derive from the (possibly new) content.
   if (input.excerpt !== undefined) {

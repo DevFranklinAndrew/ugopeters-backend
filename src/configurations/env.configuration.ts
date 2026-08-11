@@ -39,7 +39,7 @@ const envConfig = {
 
   // Seed script credentials (default to the frontend's demo login)
   ADMIN_NAME: process.env.ADMIN_NAME ?? "Ugo Peters",
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "admin@ugopeters.com",
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "admin@ugopeters.net",
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ?? "admin123",
 
   // Cloudinary (blog image uploads)
@@ -55,7 +55,7 @@ const envConfig = {
   CONTACT_NOTIFY_EMAIL:
     process.env.CONTACT_NOTIFY_EMAIL ||
     process.env.ADMIN_EMAIL ||
-    "admin@ugopeters.com",
+    "admin@ugopeters.net",
   SMTP_HOST: process.env.SMTP_HOST ?? "",
   SMTP_PORT: process.env.SMTP_PORT ?? "587",
   SMTP_USER: process.env.SMTP_USER ?? "",
