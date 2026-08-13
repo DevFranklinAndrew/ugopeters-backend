@@ -1,10 +1,6 @@
 import { model, Schema, type HydratedDocument, type Model } from "mongoose";
 
-/**
- * A contact-form submission. Mirrors the frontend `ContactMessage` type
- * (frontend/src/admin/data/mockData.ts) minus its `id` — Mongo supplies `_id`,
- * which the controller re-exposes as `id`. `read` tracks the admin inbox state.
- */
+/** A contact-form submission; `read` tracks the admin inbox state. */
 export interface IMessage {
   name: string;
   email: string;
@@ -32,8 +28,8 @@ const messageSchema = new Schema<IMessage, MessageModel>(
       lowercase: true,
       trim: true,
     },
-    // Free-form string, not an enum: the admin filter dropdown is built from the
-    // reasons actually stored, so this stays resilient if REASON_OPTIONS changes.
+    // Free-form, not an enum: the admin filter is built from the stored values,
+    // so it survives changes to REASON_OPTIONS.
     reason: {
       type: String,
       required: [true, "Reason is required."],

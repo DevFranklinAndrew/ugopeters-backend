@@ -14,7 +14,6 @@ import {
 } from "../utils/post.util";
 import { deleteImages } from "./upload.service";
 
-/** All image URLs a post references: its cover plus any inline content images. */
 const imageUrlsOf = (post: PostDocument): string[] => [
   post.image,
   ...extractImageUrls(post.content),
@@ -38,11 +37,8 @@ export interface ListPostsResult {
   };
 }
 
-/**
- * Generates a unique, kebab-case slug from a title. On collision it appends
- * `-2`, `-3`, … `excludeId` lets an update keep its own slug when the title is
- * unchanged (so it doesn't collide with itself).
- */
+/** Unique slug from a title, appending `-2`, `-3`, … on collision. `excludeId`
+ *  lets an update keep its own slug instead of colliding with itself. */
 const generateUniqueSlug = async (
   title: string,
   excludeId?: string,
@@ -51,7 +47,6 @@ const generateUniqueSlug = async (
   let slug = base;
   let suffix = 2;
 
-  // Loop until we find a slug not held by a *different* document.
   while (true) {
     const clash = await Post.findOne({ slug }).select("_id");
     if (!clash || clash.id === excludeId) return slug;
@@ -60,7 +55,6 @@ const generateUniqueSlug = async (
   }
 };
 
-/** Paginated, filterable list of posts, newest first. */
 const listPosts = async (query: ListPostsQuery): Promise<ListPostsResult> => {
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.max(1, query.limit ?? 6);
@@ -75,9 +69,8 @@ const listPosts = async (query: ListPostsQuery): Promise<ListPostsResult> => {
   }
 
   const [posts, total] = await Promise.all([
-    // Sort on the publish date so back-dated manual uploads slot into the right
-    // place chronologically, not wherever they happened to be entered.
-    // `createdAt` breaks ties (and orders any legacy row without publishedAt).
+    // publishedAt, not createdAt, so back-dated posts slot in chronologically;
+    // createdAt only breaks ties.
     Post.find(filter)
       .sort({ publishedAt: -1, createdAt: -1 })
       .skip(skip)
@@ -91,7 +84,6 @@ const listPosts = async (query: ListPostsQuery): Promise<ListPostsResult> => {
   };
 };
 
-/** Single post by slug (for the public BlogDetail page). 404 if missing. */
 const getPostBySlug = async (slug: string): Promise<PostDocument> => {
   const post = await Post.findOne({ slug });
   if (!post) throw new AppError("Post not found.", 404);
@@ -99,12 +91,9 @@ const getPostBySlug = async (slug: string): Promise<PostDocument> => {
 };
 
 /**
- * Creates a post, deriving slug / excerpt / readTime server-side.
- *
- * `date` is free text from the CMS (so older articles can be back-dated) and is
- * stored exactly as typed — it is the string readers see. `publishedAt` is a
- * best-effort parse of it, used only for ordering; text that isn't a date falls
- * back to now, which keeps the post saveable and simply sorts it as current.
+ * Creates a post, deriving slug / excerpt / readTime server-side. `date` is
+ * free text stored verbatim (it's what readers see); `publishedAt` is a
+ * best-effort parse of it for ordering, falling back to now when unparseable.
  */
 const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
   const slug = await generateUniqueSlug(input.title);
@@ -124,12 +113,8 @@ const createPost = async (input: CreatePostInput): Promise<PostDocument> => {
   });
 };
 
-/**
- * Partially updates a post by id. Regenerates the slug when the title changes,
- * recomputes readTime when content changes, and re-derives a blank excerpt.
- * The publish date is only touched when `date` is supplied, so an edit that
- * omits it leaves the original date alone. 404 if the post doesn't exist.
- */
+/** Partial update; only supplied fields are touched, so an edit that omits
+ *  `date` leaves the original publish date alone. */
 const updatePost = async (
   id: string,
   input: UpdatePostInput,
@@ -156,21 +141,19 @@ const updatePost = async (
     post.publishedAt = parsePublishDate(post.date) ?? post.publishedAt;
   }
 
-  // Use the provided excerpt, else re-derive from the (possibly new) content.
   if (input.excerpt !== undefined) {
     post.excerpt = input.excerpt.trim() || deriveExcerpt(post.content);
   }
 
   await post.save();
 
-  // Clean up Cloudinary assets no longer referenced after the update.
+  // Drop Cloudinary assets the update left unreferenced.
   const newUrls = new Set(imageUrlsOf(post));
   await deleteImages(oldUrls.filter((url) => !newUrls.has(url)));
 
   return post;
 };
 
-/** Deletes a post by id, plus its Cloudinary images. 404 if missing. */
 const deletePost = async (id: string): Promise<void> => {
   const post = await getPostById(id);
   const urls = imageUrlsOf(post);
@@ -178,7 +161,7 @@ const deletePost = async (id: string): Promise<void> => {
   await deleteImages(urls);
 };
 
-/** Loads a post by Mongo `_id`; throws 404 (CastErrors are handled globally). */
+/** Malformed ids throw a CastError, which the global handler maps to 400. */
 const getPostById = async (id: string): Promise<PostDocument> => {
   const post = await Post.findById(id);
   if (!post) throw new AppError("Post not found.", 404);

@@ -5,7 +5,6 @@ import * as subscriberService from "../services/subscriber.service";
 import { toPositiveInt } from "../utils/query.util";
 import { validateCreateSubscriber } from "../validations/subscriber.validation";
 
-/** Shapes a subscriber document into the API payload (exposes `_id` as `id`). */
 const toPublicSubscriber = (subscriber: SubscriberDocument) => ({
   id: subscriber.id as string,
   email: subscriber.email,
@@ -16,9 +15,7 @@ const subscribe = async (req: Request, res: Response): Promise<void> => {
   const { email } = validateCreateSubscriber(req.body);
   const { subscriber, created } = await subscriberService.subscribe(email);
 
-  // Only on a genuinely new signup: welcome the subscriber and alert Ugo.
-  // Best-effort side effects, not awaited so they can't block or fail the
-  // response (each fn handles its own errors); repeats send nothing.
+  // New signups only; deliberately not awaited (best-effort, self-handling).
   if (created) {
     emailService.sendWelcomeEmail(subscriber.email);
     emailService.sendSubscriberNotification(subscriber.email);

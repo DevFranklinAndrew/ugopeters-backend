@@ -10,8 +10,8 @@ appConfig(app);
 
 const server = app.listen(port, () => {
   console.log(`Server is listening to PORT: ${port}`);
-  // A blocked origin produces no server-side error — the browser just drops the
-  // response — so log the allow-list to make a CORS misconfiguration visible.
+  // A blocked origin raises no server-side error, so log the allow-list to make
+  // a CORS misconfiguration visible.
   console.log(`[cors] allowed origins: ${envConfig.CORS_ORIGINS.join(", ")}`);
 });
 

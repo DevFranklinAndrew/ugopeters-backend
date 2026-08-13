@@ -37,7 +37,6 @@ const globalErrorHandler = (
     if ((error as any).code === 11000) error = handleDuplicateKeyError(error);
   }
 
-  // DEVELOPMENT MODE
   if (envConfig.NODE_ENV === "development") {
     const statusCode = error instanceof AppError ? error.statusCode : 500;
 
@@ -51,7 +50,6 @@ const globalErrorHandler = (
     return;
   }
 
-  // PRODUCTION MODE
   if (error instanceof AppError && error.isOperational) {
     res
       .status(error.statusCode)

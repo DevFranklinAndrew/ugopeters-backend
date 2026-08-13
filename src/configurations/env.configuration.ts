@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-/** Canonical site URL. Used to build links in outgoing email, so it must stay
- *  a single origin — the CORS allow-list is CORS_ORIGINS below. */
+/** Canonical site URL, used for links in outgoing email — a single origin.
+ *  The CORS allow-list is CORS_ORIGINS below. */
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
 const envConfig = {
@@ -12,15 +12,10 @@ const envConfig = {
   MONGO_URI: process.env.MONGO_URI ?? "mongodb://127.0.0.1:27017/ugopeters",
   CLIENT_URL,
 
-  /** Browser origins allowed to call the API with credentials. Comma-separated
-   *  so apex + www + preview deployments can be served without a code change.
-   *
-   *  The fallback lists the known production hosts deliberately: if this were
-   *  left to CLIENT_URL alone, forgetting to set CORS_ORIGINS on the host would
-   *  silently block the live site. Setting CORS_ORIGINS replaces the list.
-   *
-   *  Trailing slashes are stripped — an Origin header never carries one, and a
-   *  stray slash makes the comparison fail with no obvious cause. */
+  /** Comma-separated origins allowed to call the API with credentials; setting
+   *  it replaces the fallback, which names the production hosts so a missing
+   *  CORS_ORIGINS can't silently block the live site. Trailing slashes are
+   *  stripped — an Origin header never carries one. */
   CORS_ORIGINS: (
     process.env.CORS_ORIGINS ??
     [
@@ -51,7 +46,7 @@ const envConfig = {
   // Email (Resend primary, SMTP fallback) — unset ⇒ email is skipped, not an error.
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
   EMAIL_FROM: process.env.EMAIL_FROM ?? "Ugo Peters <onboarding@resend.dev>",
-  // `||` (not `??`) so a present-but-empty var falls back instead of sending to "".
+  // `||` not `??`: a present-but-empty var must fall back, not send to "".
   CONTACT_NOTIFY_EMAIL:
     process.env.CONTACT_NOTIFY_EMAIL ||
     process.env.ADMIN_EMAIL ||

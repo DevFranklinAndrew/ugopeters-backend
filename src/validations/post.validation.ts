@@ -1,12 +1,8 @@
 import { z } from "zod";
 import AppError from "../errors/app.error";
 
-/**
- * Client-supplied fields for a post. The server owns the derived fields
- * (`slug`, `readTime`) and fills `excerpt` from `content` when blank, so those
- * are NOT accepted here. `date` IS accepted so the CMS can back-date manual
- * uploads; omitted, it defaults to today.
- */
+/** Client-supplied fields only. `slug` and `readTime` are server-derived, so
+ *  they are deliberately not accepted; `date` is, so uploads can be back-dated. */
 const createPostSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
   content: z.string().trim().min(1, "Content is required."),
@@ -14,9 +10,7 @@ const createPostSchema = z.object({
   image: z.string().trim().min(1, "Image is required."),
   excerpt: z.string().trim().optional(),
   featured: z.boolean().optional(),
-  // Free text — stored and displayed verbatim (e.g. "January 15, 2020"), so the
-  // author controls exactly how it reads. Only parsed, best-effort, to derive
-  // the sortable publishedAt.
+  // Free text, displayed verbatim; only parsed to derive the sortable publishedAt.
   date: z.string().trim().min(1, "Date cannot be empty.").optional(),
 });
 
@@ -33,14 +27,12 @@ export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 const formatIssues = (error: z.ZodError): string =>
   error.issues.map((issue) => issue.message).join(". ");
 
-/** Validate a create payload; zod failures become an operational AppError (422). */
 export const validateCreatePost = (payload: unknown): CreatePostInput => {
   const result = createPostSchema.safeParse(payload);
   if (!result.success) throw new AppError(formatIssues(result.error), 422);
   return result.data;
 };
 
-/** Validate a partial update payload; zod failures become an AppError (422). */
 export const validateUpdatePost = (payload: unknown): UpdatePostInput => {
   const result = updatePostSchema.safeParse(payload);
   if (!result.success) throw new AppError(formatIssues(result.error), 422);

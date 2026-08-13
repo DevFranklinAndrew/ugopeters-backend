@@ -5,7 +5,7 @@ import { protect } from "../middleware/auth.middleware";
 
 const router = Router();
 
-// Throttle login attempts to blunt brute-force / credential-stuffing.
+// Tight: blunts brute-force / credential-stuffing.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,

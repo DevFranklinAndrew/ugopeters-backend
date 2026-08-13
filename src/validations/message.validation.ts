@@ -1,11 +1,8 @@
 import { z } from "zod";
 import AppError from "../errors/app.error";
 
-/**
- * Client-supplied fields for a contact message. `read` and the timestamps are
- * server-owned, so they are NOT accepted here. `.max()` caps keep this public
- * endpoint from being used to store oversized blobs.
- */
+/** Client-supplied fields only — `read` is server-owned. The `.max()` caps stop
+ *  this public endpoint being used to store oversized blobs. */
 const createMessageSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(200, "Name is too long."),
   email: z
@@ -42,14 +39,12 @@ export type UpdateMessageInput = z.infer<typeof updateMessageSchema>;
 const formatIssues = (error: z.ZodError): string =>
   error.issues.map((issue) => issue.message).join(". ");
 
-/** Validate a create payload; zod failures become an operational AppError (422). */
 export const validateCreateMessage = (payload: unknown): CreateMessageInput => {
   const result = createMessageSchema.safeParse(payload);
   if (!result.success) throw new AppError(formatIssues(result.error), 422);
   return result.data;
 };
 
-/** Validate a read-status update; zod failures become an AppError (422). */
 export const validateUpdateMessage = (payload: unknown): UpdateMessageInput => {
   const result = updateMessageSchema.safeParse(payload);
   if (!result.success) throw new AppError(formatIssues(result.error), 422);

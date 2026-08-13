@@ -19,11 +19,8 @@ export interface ListSubscribersResult {
   };
 }
 
-/**
- * Idempotent subscribe. Upserts by email so re-subscribing is a graceful
- * success (never a duplicate-key error), and it's race-safe under concurrent
- * requests. `created` is true only when a new row was actually inserted.
- */
+/** Upserts so re-subscribing succeeds instead of hitting a duplicate key, and
+ *  stays race-safe. `created` is true only when a row was actually inserted. */
 const subscribe = async (
   email: string,
 ): Promise<{ subscriber: SubscriberDocument; created: boolean }> => {
@@ -43,7 +40,6 @@ const subscribe = async (
   return { subscriber, created };
 };
 
-/** Paginated, searchable list of subscribers, newest first (for the admin page). */
 const listSubscribers = async (
   query: ListSubscribersQuery,
 ): Promise<ListSubscribersResult> => {
@@ -65,14 +61,12 @@ const listSubscribers = async (
   };
 };
 
-/** Deletes a subscriber by id. 404 if missing. */
 const deleteSubscriber = async (id: string): Promise<void> => {
   const subscriber = await Subscriber.findById(id);
   if (!subscriber) throw new AppError("Subscriber not found.", 404);
   await subscriber.deleteOne();
 };
 
-/** Every subscriber's email address (for newsletter broadcasts). */
 const getAllEmails = async (): Promise<string[]> => {
   const docs = await Subscriber.find().select("email").lean();
   return docs.map((doc) => doc.email);

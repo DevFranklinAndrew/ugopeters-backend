@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import envConfig from "../configurations/env.configuration";
 import Post from "../models/post.model";
 
-/** Shape of the frontend's static posts (see frontend/src/data/post.ts). */
+/** Mirrors frontend/src/data/post.ts. */
 type SeedPost = {
   id: string;
   slug: string;
@@ -21,11 +21,9 @@ type SeedPost = {
 };
 
 /**
- * Loads the frontend's static blog data (the source of truth for the initial
- * seed). It lives outside backend's rootDir and is an ESM module, so it can't be
- * `import`ed (tsc rootDir) or `require`d (ERR_REQUIRE_ESM). Instead we read it
- * as text and transpile it in-memory to CommonJS — the file is pure data with
- * no imports, so evaluating it standalone is safe.
+ * The frontend's post data sits outside backend's rootDir and is ESM, so it can
+ * be neither `import`ed (rootDir) nor `require`d (ERR_REQUIRE_ESM). Reading and
+ * transpiling it in-memory is safe because the file is pure data, no imports.
  */
 const loadFrontendPosts = (): SeedPost[] => {
   const file = path.resolve(__dirname, "../../../frontend/src/data/post.ts");
@@ -52,11 +50,7 @@ const loadFrontendPosts = (): SeedPost[] => {
 
 const posts = loadFrontendPosts();
 
-/**
- * Ports the existing frontend posts into MongoDB. Idempotent: a post whose slug
- * already exists is left untouched (skipped). The frontend `id` is dropped —
- * Mongo assigns its own `_id`. Run with `npm run seed:posts`.
- */
+/** `npm run seed:posts`. Idempotent — an existing slug is skipped, not updated. */
 const seedPosts = async (): Promise<void> => {
   try {
     await mongoose.connect(envConfig.MONGO_URI);
@@ -72,9 +66,8 @@ const seedPosts = async (): Promise<void> => {
         continue;
       }
 
-      // The seed data only carries a display date ("January 28, 2026"); derive
-      // the sortable publishedAt from it so seeded posts order chronologically
-      // rather than by insertion. Unparseable dates fall back to the default.
+      // Seed data carries only a display date; derive publishedAt so seeded
+      // posts order chronologically rather than by insertion.
       const parsed = new Date(post.date);
       const publishedAt = Number.isNaN(parsed.getTime()) ? undefined : parsed;
 

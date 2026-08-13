@@ -1,17 +1,13 @@
 import { model, Schema, type HydratedDocument, type Model } from "mongoose";
 
-/**
- * A blog article. Mirrors the frontend `Post` interface
- * (frontend/src/data/post.ts) minus its `id` — Mongo supplies `_id`, which the
- * controller re-exposes as `id`. `content` is raw HTML; `slug` is the public key.
- */
+/** Mirrors the frontend `Post` (frontend/src/data/post.ts); `content` is raw HTML. */
 export interface IPost {
   slug: string;
   title: string;
   excerpt: string;
   content: string;
   date: string;
-  /** Sortable publish date. `date` above is only its display rendering. */
+  /** Sortable publish date; `date` above is only its display rendering. */
   publishedAt: Date;
   category: string;
   readTime: string;

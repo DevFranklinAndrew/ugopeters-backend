@@ -13,13 +13,11 @@ const isProd = envConfig.NODE_ENV === "production";
 const cookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProd,
-  // Cross-site in production (SPA on Vercel → API on another host) requires
-  // SameSite=None; "lax" is fine for same-site localhost dev.
+  // Production is cross-site (SPA on Vercel → API elsewhere), which needs None.
   sameSite: isProd ? "none" : "lax",
   maxAge: COOKIE_MAX_AGE,
 };
 
-/** Shapes an admin document into the safe, password-free payload the API returns. */
 const toPublicAdmin = (admin: AdminDocument) => ({
   id: admin.id as string,
   name: admin.name,

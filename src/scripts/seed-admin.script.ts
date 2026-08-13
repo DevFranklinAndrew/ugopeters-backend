@@ -2,11 +2,8 @@ import mongoose from "mongoose";
 import envConfig from "../configurations/env.configuration";
 import Admin from "../models/admin.model";
 
-/**
- * Provisions the single CMS administrator from environment variables
- * (ADMIN_NAME / ADMIN_EMAIL / ADMIN_PASSWORD). Idempotent: if an admin with the
- * configured email already exists it is left untouched. Run with `npm run seed:admin`.
- */
+/** `npm run seed:admin` — provisions the CMS admin from ADMIN_* env vars.
+ *  Idempotent: an existing account for that email is left untouched. */
 const seedAdmin = async (): Promise<void> => {
   try {
     await mongoose.connect(envConfig.MONGO_URI);

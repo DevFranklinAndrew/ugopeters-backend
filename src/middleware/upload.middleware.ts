@@ -4,10 +4,7 @@ import AppError from "../errors/app.error";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
 
-/**
- * Buffers a single image in memory (not disk) so the service can stream it
- * straight to Cloudinary. Rejects non-image files up front.
- */
+// Memory, not disk, so the service can stream straight to Cloudinary.
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_BYTES },
@@ -19,11 +16,7 @@ const upload = multer({
 
 const singleImage = upload.single("image");
 
-/**
- * Runs multer for a single `image` field and normalizes its errors into
- * operational AppErrors so the global handler formats them consistently
- * (rather than surfacing a raw MulterError as a 500).
- */
+/** Runs multer, normalizing MulterErrors into AppErrors so they aren't 500s. */
 export const uploadSingleImage = (
   req: Request,
   res: Response,

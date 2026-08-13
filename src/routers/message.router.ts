@@ -5,7 +5,7 @@ import { protect } from "../middleware/auth.middleware";
 
 const router = Router();
 
-// Tight throttle on the public, unauthenticated contact form to blunt spam.
+// Tight: the contact form is public and unauthenticated, so it attracts spam.
 const submitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
@@ -17,7 +17,7 @@ const submitLimiter = rateLimit({
   },
 });
 
-// Light throttle on authenticated writes as a backstop against runaway clients.
+// Loose: authenticated writes only need a backstop against runaway clients.
 const writeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
@@ -29,10 +29,8 @@ const writeLimiter = rateLimit({
   },
 });
 
-// Public contact-form submission.
 router.post("/", submitLimiter, messageController.submitMessage);
 
-// Admin-only inbox management (cookie/JWT session via `protect`).
 router.get("/", protect, messageController.listMessages);
 router.patch("/:id", protect, writeLimiter, messageController.markMessageRead);
 router.delete("/:id", protect, writeLimiter, messageController.deleteMessage);

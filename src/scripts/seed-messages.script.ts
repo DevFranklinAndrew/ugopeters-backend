@@ -3,11 +3,9 @@ import envConfig from "../configurations/env.configuration";
 import Message, { type IMessage } from "../models/message.model";
 
 /**
- * Seeds a batch of contact messages so the admin inbox has enough data to
- * demonstrate pagination (8 per page), the read/unread filter, and the reason
- * filter. Idempotent: every seeded doc uses an `@seed.example` email, so a
- * re-run clears the previous batch first and leaves real submissions untouched.
- * Run with `npm run seed:messages`.
+ * `npm run seed:messages` — enough inbox data to exercise pagination and the
+ * filters. Every seeded doc uses an `@seed.example` email, so a re-run can
+ * clear the previous batch without touching real submissions.
  */
 
 const SEED_DOMAIN = "seed.example";
@@ -100,7 +98,7 @@ const buildMessages = (): Array<
     const subject = subjects[i % subjects.length];
     const body = BODY_TEMPLATES[i % BODY_TEMPLATES.length];
     const first = name.split(" ")[0].toLowerCase();
-    // Spread timestamps ~6h apart so the newest-first ordering is meaningful.
+    // ~6h apart, so newest-first ordering is meaningful.
     const createdAt = new Date(now - i * 6 * HOURS);
 
     return {
@@ -109,7 +107,7 @@ const buildMessages = (): Array<
       reason,
       subject,
       message: `${body}\n${name}`,
-      // Older half trends read; newest stay unread — gives the filter something to show.
+      // Older trends read, newest stay unread, so the filter has both.
       read: i >= 8 && i % 3 !== 0,
       createdAt,
       updatedAt: createdAt,
@@ -130,7 +128,7 @@ const seedMessages = async (): Promise<void> => {
     }
 
     const docs = buildMessages();
-    // Disable auto-timestamps so our spread-out createdAt values persist.
+    // timestamps: false, or Mongoose overwrites the spread-out createdAt values.
     await Message.insertMany(docs, { timestamps: false });
 
     const unread = docs.filter((d) => !d.read).length;

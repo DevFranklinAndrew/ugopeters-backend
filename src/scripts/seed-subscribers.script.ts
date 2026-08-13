@@ -3,11 +3,9 @@ import envConfig from "../configurations/env.configuration";
 import Subscriber, { type ISubscriber } from "../models/subscriber.model";
 
 /**
- * Seeds a batch of newsletter subscribers so the admin page has enough data to
- * demonstrate pagination (10 per page), email search, and the period filter.
- * Idempotent: every seeded doc uses an `@seed.example` email, so a re-run clears
- * the previous batch first and leaves real subscribers untouched.
- * Run with `npm run seed:subscribers`.
+ * `npm run seed:subscribers` — enough data to exercise pagination, search, and
+ * the period filter. Every seeded doc uses an `@seed.example` email, so a re-run
+ * can clear the previous batch without touching real subscribers.
  */
 
 const SEED_DOMAIN = "seed.example";
@@ -48,8 +46,7 @@ const buildSubscribers = (): Array<
 
   return Array.from({ length: COUNT }, (_, i) => {
     const handle = HANDLES[i % HANDLES.length];
-    // Spread ~2 days apart so newest-first ordering and the period filter
-    // (last 7 / 30 days) have something meaningful to show.
+    // ~2 days apart, so the period filter (last 7 / 30 days) has something to show.
     const createdAt = new Date(now - i * 2 * DAY);
 
     return {
@@ -75,7 +72,7 @@ const seedSubscribers = async (): Promise<void> => {
     }
 
     const docs = buildSubscribers();
-    // Disable auto-timestamps so our spread-out createdAt values persist.
+    // timestamps: false, or Mongoose overwrites the spread-out createdAt values.
     await Subscriber.insertMany(docs, { timestamps: false });
 
     console.log(

@@ -8,7 +8,6 @@ import {
   validateUpdatePost,
 } from "../validations/post.validation";
 
-/** Shapes a post document into the API payload (exposes `_id` as `id`). */
 const toPublicPost = (post: PostDocument) => ({
   id: post.id as string,
   slug: post.slug,
@@ -16,8 +15,7 @@ const toPublicPost = (post: PostDocument) => ({
   excerpt: post.excerpt,
   content: post.content,
   date: post.date,
-  // The sortable form of `date` — the CMS prefills its date input from this.
-  publishedAt: post.publishedAt,
+  publishedAt: post.publishedAt, // Sortable form of `date`; the CMS prefills from it.
   category: post.category,
   readTime: post.readTime,
   image: post.image,
@@ -56,9 +54,7 @@ const createPost = async (req: Request, res: Response): Promise<void> => {
   const input = validateCreatePost(req.body);
   const post = await postService.createPost(input);
 
-  // Announce the new post to newsletter subscribers. Not awaited: it's a
-  // best-effort side effect that must not block or fail the create response
-  // (the function catches its own errors internally).
+  // Deliberately not awaited: best-effort, and it handles its own errors.
   emailService.sendNewPostNotification(post);
 
   res.status(201).json({

@@ -8,7 +8,6 @@ import {
   validateUpdateMessage,
 } from "../validations/message.validation";
 
-/** Shapes a message document into the API payload (exposes `_id` as `id`). */
 const toPublicMessage = (message: MessageDocument) => ({
   id: message.id as string,
   name: message.name,
@@ -24,8 +23,7 @@ const submitMessage = async (req: Request, res: Response): Promise<void> => {
   const input = validateCreateMessage(req.body);
   const message = await messageService.createMessage(input);
 
-  // Notify Ugo — best-effort side effect, not awaited so it can't block or fail
-  // the response (the message is already saved; the fn handles its own errors).
+  // Deliberately not awaited: best-effort, and it handles its own errors.
   emailService.sendContactNotification(message);
 
   res.status(201).json({

@@ -8,11 +8,7 @@ export interface UploadResult {
   publicId: string;
 }
 
-/**
- * Streams an in-memory image buffer to Cloudinary and returns its hosted URL.
- * Large images are capped at 2000px wide (aspect preserved) to keep delivery
- * light. `publicId` is returned so a future step can delete orphaned assets.
- */
+/** Capped at 2000px wide (aspect preserved) to keep delivery light. */
 const uploadImage = (buffer: Buffer): Promise<UploadResult> =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -23,7 +19,6 @@ const uploadImage = (buffer: Buffer): Promise<UploadResult> =>
       },
       (error, result) => {
         if (error || !result) {
-          // Log the real Cloudinary error server-side; return a clean message.
           console.error("[upload] Cloudinary error:", error);
           return reject(
             new AppError("Image upload failed. Please try again.", 502),
@@ -37,10 +32,8 @@ const uploadImage = (buffer: Buffer): Promise<UploadResult> =>
   });
 
 /**
- * Recovers a Cloudinary `publicId` (incl. folder) from one of its delivery
- * URLs, so assets can be deleted without persisting the id separately. Strips
- * any transformation segments and the `v<version>/` prefix, then the extension.
- * Returns null for anything that isn't a Cloudinary-hosted URL.
+ * Recovers a `publicId` from a delivery URL, so assets can be deleted without
+ * storing the id separately. Null for non-Cloudinary URLs.
  *
  *   https://res.cloudinary.com/x/image/upload/c_limit,w_2000/v17/ugopeters/blog/abc.png
  *     → "ugopeters/blog/abc"
@@ -55,11 +48,8 @@ const publicIdFromUrl = (url: string): string | null => {
   return publicId || null;
 };
 
-/**
- * Best-effort deletion of Cloudinary assets by their URLs. Non-Cloudinary URLs
- * are ignored; individual failures are logged but never thrown — cleanup must
- * not fail the post operation that triggered it.
- */
+/** Failures are logged, never thrown — cleanup must not fail the post
+ *  operation that triggered it. */
 const deleteImages = async (urls: string[]): Promise<void> => {
   const publicIds = urls
     .map(publicIdFromUrl)

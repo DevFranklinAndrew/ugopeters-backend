@@ -17,15 +17,11 @@ const appConfig = (app: Application) => {
     .use(
       cors({
         credentials: true,
-        // Driven by CORS_ORIGINS. Hosts used to be hardcoded here, so every new
-        // frontend origin (apex, www, a custom domain) needed a code change and
-        // redeploy before the browser would accept a response.
         origin: envConfig.CORS_ORIGINS,
       }),
     )
     .use(helmet())
-    // Images now upload to Cloudinary (POST /api/upload) and posts store only
-    // URLs, so bodies are small. 1mb is generous headroom for long articles.
+    // Images go to Cloudinary and posts store only URLs, so bodies stay small.
     .use(express.json({ limit: "1mb" }))
     .use(cookieParser())
     .set("trust proxy", 1)

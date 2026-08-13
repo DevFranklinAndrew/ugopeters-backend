@@ -1,11 +1,8 @@
 import Admin, { type AdminDocument } from "../models/admin.model";
 import AppError from "../errors/app.error";
 
-/**
- * Verifies an email/password pair against the stored admin. Throws a 401 on
- * any mismatch (unknown email or wrong password) with the same message, so the
- * response never reveals whether the email exists.
- */
+/** Unknown email and wrong password share one message, so the response never
+ *  reveals whether an account exists. */
 const verifyCredentials = async (
   email: string,
   password: string,
@@ -19,10 +16,7 @@ const verifyCredentials = async (
   return admin;
 };
 
-/**
- * Loads an admin by id (used by `/me` and the auth middleware). Throws 401 if
- * the account no longer exists so a stale token can't stay "logged in".
- */
+/** 401 (not 404) on a missing account, so a stale token can't stay logged in. */
 const getAdminById = async (id: string): Promise<AdminDocument> => {
   const admin = await Admin.findById(id);
   if (!admin) throw new AppError("This account no longer exists.", 401);

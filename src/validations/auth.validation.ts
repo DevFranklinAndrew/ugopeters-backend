@@ -8,11 +8,6 @@ const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-/**
- * Parses and validates a login payload. Converts zod failures into an
- * operational AppError (422) so the global error handler formats them
- * consistently with the rest of the API.
- */
 const validateLogin = (payload: unknown): LoginInput => {
   const result = loginSchema.safeParse(payload);
   if (!result.success) {

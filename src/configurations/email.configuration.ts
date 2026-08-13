@@ -3,15 +3,11 @@ import { Resend } from "resend";
 import envConfig from "./env.configuration";
 
 /**
- * Email clients built once from the environment (like cloudinary.configuration).
- * Both are optional: when their credentials are absent the export is `null`, and
- * the email service treats "no provider configured" as a skip — never an error.
- * Resend is the primary transport; SMTP (Nodemailer) is the fallback.
+ * Resend (primary) and SMTP (fallback), both optional — `null` when their
+ * credentials are absent, which the email service treats as a skip, not an error.
  *
- * Note: with the default `onboarding@resend.dev` sender, Resend only delivers to
- * the account owner's own email until you verify a domain (resend.com/domains)
- * and set EMAIL_FROM to an address on it. Until then, sends to any other
- * recipient fail — non-blocking, so the request still succeeds.
+ * Note: the default `onboarding@resend.dev` sender only delivers to the Resend
+ * account owner until you verify a domain and point EMAIL_FROM at it.
  */
 
 export const resendClient = envConfig.RESEND_API_KEY

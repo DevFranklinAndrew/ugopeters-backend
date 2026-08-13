@@ -5,7 +5,7 @@ import { protect } from "../middleware/auth.middleware";
 
 const router = Router();
 
-// Tight throttle on the public, unauthenticated subscribe form to blunt spam.
+// Tight: the subscribe form is public and unauthenticated, so it attracts spam.
 const submitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
@@ -17,7 +17,7 @@ const submitLimiter = rateLimit({
   },
 });
 
-// Light throttle on authenticated writes as a backstop against runaway clients.
+// Loose: authenticated writes only need a backstop against runaway clients.
 const writeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
@@ -29,10 +29,8 @@ const writeLimiter = rateLimit({
   },
 });
 
-// Public newsletter subscription.
 router.post("/", submitLimiter, subscriberController.subscribe);
 
-// Admin-only management (cookie/JWT session via `protect`).
 router.get("/", protect, subscriberController.listSubscribers);
 router.delete("/:id", protect, writeLimiter, subscriberController.deleteSubscriber);
 

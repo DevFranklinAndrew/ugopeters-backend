@@ -6,7 +6,7 @@ import { uploadSingleImage } from "../middleware/upload.middleware";
 
 const router = Router();
 
-// Throttle uploads as a backstop against runaway clients / abuse.
+// Loose: authenticated uploads only need a backstop against runaway clients.
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
@@ -18,7 +18,7 @@ const uploadLimiter = rateLimit({
   },
 });
 
-// Admin-only image upload (multipart/form-data, field name "image").
+// multipart/form-data, field name "image".
 router.post(
   "/",
   protect,

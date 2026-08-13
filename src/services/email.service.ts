@@ -9,7 +9,6 @@ interface MailOptions {
   to: string;
   subject: string;
   html: string;
-  /** Address replies should go to (e.g. the person who filled the contact form). */
   replyTo?: string;
 }
 
@@ -21,22 +20,18 @@ const escapeHtml = (value: string): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-/** Escapes text and preserves its line breaks as <br> (for email bodies). */
+/** Escapes text and preserves its line breaks as <br>. */
 const nl2br = (value: string): string =>
   escapeHtml(value).replace(/\n/g, "<br />");
 
 const GOLD = "#d4af37";
 
-// Brand fonts (mirrors the site) with web-safe fallbacks for clients — e.g.
-// Gmail — that strip webfonts. Serif for headings, sans for body/UI.
+// Site fonts, with web-safe fallbacks for clients (Gmail) that strip webfonts.
 const FONT_SERIF = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 const FONT_SANS =
   "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-/**
- * A "bulletproof" CTA button — a table wrapper with an inline-styled anchor, so
- * it renders consistently across email clients (including Outlook).
- */
+/** Table-wrapped CTA so it survives Outlook. */
 const button = (href: string, label: string): string => `
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 4px 0;">
     <tr>
@@ -46,11 +41,8 @@ const button = (href: string, label: string): string => `
     </tr>
   </table>`;
 
-/**
- * Wraps body HTML in a responsive, email-client-safe layout: a centered white
- * card on a light background, a gold accent bar, a serif brand + heading, and a
- * muted footer. Table-based and fully inline-styled for maximum compatibility.
- */
+/** Shared shell for every email. Table-based and inline-styled for client
+ *  compatibility; light-only, since email clients don't honour a dark palette. */
 const layout = (heading: string, bodyHtml: string): string => `
   <!DOCTYPE html>
   <html>
@@ -102,11 +94,8 @@ const layout = (heading: string, bodyHtml: string): string => `
     </body>
   </html>`;
 
-/**
- * Low-level send. Tries Resend, then SMTP; when neither is configured it logs a
- * skip and returns (email is optional — the request that triggered it already
- * succeeded). Throws only when a configured provider actually fails to send.
- */
+/** Resend first, then SMTP. No provider configured is a skip, not an error —
+ *  the request that triggered the mail has already succeeded. */
 const sendMail = async ({
   to,
   subject,
@@ -141,14 +130,12 @@ const sendMail = async ({
   );
 };
 
-/** A labelled row used in the contact-notification detail table. */
 const detailRow = (label: string, value: string): string => `
   <tr>
     <td style="padding: 5px 0; width: 84px; color: #71717a; vertical-align: top;">${label}</td>
     <td style="padding: 5px 0; color: #111111;">${value}</td>
   </tr>`;
 
-/** Fields of a contact submission the notification email needs. */
 interface ContactNotice {
   name: string;
   email: string;
@@ -157,10 +144,7 @@ interface ContactNotice {
   message: string;
 }
 
-/**
- * Notifies Ugo of a new contact-form submission. Best-effort: any failure is
- * logged and swallowed so the caller can fire it and forget.
- */
+/** Best-effort: never throws, so callers can fire and forget. */
 export const sendContactNotification = async (
   msg: ContactNotice,
 ): Promise<void> => {
@@ -186,7 +170,6 @@ export const sendContactNotification = async (
   }
 };
 
-/** Welcomes a brand-new newsletter subscriber. Best-effort (logs on failure). */
 export const sendWelcomeEmail = async (email: string): Promise<void> => {
   try {
     const html = layout(
@@ -205,7 +188,6 @@ export const sendWelcomeEmail = async (email: string): Promise<void> => {
   }
 };
 
-/** Notifies Ugo of a new newsletter signup. Best-effort (logs on failure). */
 export const sendSubscriberNotification = async (
   email: string,
 ): Promise<void> => {
@@ -225,7 +207,6 @@ export const sendSubscriberNotification = async (
   }
 };
 
-/** Fields of a newly published post the newsletter blast needs. */
 interface PostNotice {
   title: string;
   excerpt: string;
@@ -233,11 +214,9 @@ interface PostNotice {
 }
 
 /**
- * Emails every newsletter subscriber about a newly published post. Best-effort:
- * sends individually (one recipient per email, so addresses stay private),
- * sequentially (to respect provider rate limits), and logs — never throws — so
- * the caller can fire it and forget. Skips entirely when no provider is
- * configured or there are no subscribers.
+ * Announces a new post to every subscriber. One recipient per email keeps
+ * addresses private; sending sequentially respects provider rate limits.
+ * Best-effort: never throws.
  */
 export const sendNewPostNotification = async (
   post: PostNotice,

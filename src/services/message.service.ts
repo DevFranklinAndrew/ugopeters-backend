@@ -19,12 +19,10 @@ export interface ListMessagesResult {
   };
 }
 
-/** Persists a contact submission. `read` defaults to false via the schema. */
 const createMessage = async (
   input: CreateMessageInput,
 ): Promise<MessageDocument> => Message.create({ ...input });
 
-/** Paginated, filterable list of messages, newest first (for the admin inbox). */
 const listMessages = async (
   query: ListMessagesQuery,
 ): Promise<ListMessagesResult> => {
@@ -47,14 +45,13 @@ const listMessages = async (
   };
 };
 
-/** Loads a message by Mongo `_id`; throws 404 (CastErrors are handled globally). */
+/** Malformed ids throw a CastError, which the global handler maps to 400. */
 const getMessageById = async (id: string): Promise<MessageDocument> => {
   const message = await Message.findById(id);
   if (!message) throw new AppError("Message not found.", 404);
   return message;
 };
 
-/** Toggles a message's read status. 404 if it doesn't exist. */
 const updateMessageRead = async (
   id: string,
   read: boolean,
@@ -65,7 +62,6 @@ const updateMessageRead = async (
   return message;
 };
 
-/** Deletes a message by id. 404 if missing. */
 const deleteMessage = async (id: string): Promise<void> => {
   const message = await getMessageById(id);
   await message.deleteOne();
